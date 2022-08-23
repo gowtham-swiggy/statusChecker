@@ -16,6 +16,30 @@ type SiteStruct struct {
 	Website []string `json:"website"`
 }
 
+type StatusFinder interface {
+	Checker(link string) (code int, err error)
+}
+
+type httpLink struct {
+	link string
+}
+
+func (h httpLink) Checker() (stausCode int, err error) {
+	client := http.Client{}
+	r, err := http.NewRequest("GET", "http://"+h.link, nil)
+	if err != nil {
+		fmt.Println(err)
+		return 0, err
+	}
+	resp, err := client.Do(r)
+	if err != nil {
+		fmt.Println(err)
+		return 0, err
+	}
+	defer resp.Body.Close()
+	return resp.StatusCode, nil
+}
+
 func main() {
 	updater = 0
 	go StatusUpdaterUtility()
@@ -37,11 +61,10 @@ func main() {
 
 func HomePageHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "You are in Home Page")
-	fmt.Println("You are in Home Page")
+	fmt.Println("You are in Home Handler")
 }
 
 func PostHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Fprint(w,"HI\n")
 	w.Header().Set("Content-Type", "Application/json")
 	site := SiteStruct{}
 	err := json.NewDecoder(r.Body).Decode(&site)
@@ -50,20 +73,26 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	for _, j := range site.Website {
-		sites[j] = StatusFinder(j)
+		var tmpVar httpLink
+		tmpVar.link = j
+		sites[j], err = tmpVar.Checker()
+		if err != nil {
+			fmt.Println("Error occured for " + j)
+			fmt.Println(err)
+		}
 	}
-	fmt.Println("You are in Post Page")
+	fmt.Println("You are in Post Handler")
 	fmt.Fprint(w, sites)
 }
 
 func GetHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("You are in Get Page")
+	fmt.Println("You are in Get Handler")
 	for i := range sites {
 		var resultString string
 		if sites[i] == 200 {
-			resultString = "The status of website " + i + " is UP"
+			resultString = "The status of website " + i + " is UP\n"
 		} else {
-			resultString = "The status of website " + i + " is DOWN"
+			resultString = "The status of website " + i + " is DOWN\n"
 		}
 		fmt.Fprint(w, resultString)
 	}
@@ -71,7 +100,7 @@ func GetHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetSingleHandler(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("You are in Get Single Site Details Page")
+	fmt.Println("You are in Get Single Site Details Handler")
 	website := r.URL.Query().Get("name")
 	var resultString string
 	if sites[website] == 200 {
@@ -84,29 +113,34 @@ func GetSingleHandler(w http.ResponseWriter, r *http.Request) {
 
 func AnythingHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "Error 404...")
-	fmt.Println("You are in anything handler")
+	fmt.Println("You are in anything Handler")
 }
 
-func StatusFinder(link string) int {
-	client := http.Client{}
-	r, err := http.NewRequest("GET", "http://"+link, nil)
-	if err != nil {
-		fmt.Println(err)
-		return 0
-	}
-	resp, err := client.Do(r)
-	if err != nil {
-		fmt.Println(err)
-		return 0
-	}
-	defer resp.Body.Close()
-	return resp.StatusCode
-}
+// func StatusFinder(link string) int {
+// 	client := http.Client{}
+// 	r, err := http.NewRequest("GET", "http://"+link, nil)
+// 	if err != nil {
+// 		fmt.Println(err)
+// 		return 0
+// 	}
+// 	resp, err := client.Do(r)
+// 	if err != nil {
+// 		fmt.Println(err)
+// 		return 0
+// 	}
+// 	defer resp.Body.Close()
+// 	return resp.StatusCode
+// }
 
 func StatusUpdater(link string) {
-	sites[link] = StatusFinder(link)
+	var tmpVar httpLink
+	tmpVar.link = link
+	var err error
+	sites[link], err = tmpVar.Checker()
+	if err != nil {
+		fmt.Println(err)
+	}
 }
-
 
 func StatusUpdaterUtility() {
 	for {
@@ -116,12 +150,12 @@ func StatusUpdaterUtility() {
 		updater++
 		var tmp string
 		if updater == 1 {
-			tmp = "time"
+			tmp = " time."
 		} else {
-			tmp = "times"
+			tmp = " times."
 		}
-		fmt.Println("Updated Date" + strconv.Itoa(updater) + tmp)
-		
+		fmt.Println("Updated Data " + strconv.Itoa(updater) + tmp)
+
 		time.Sleep(60 * time.Second)
 	}
 }
