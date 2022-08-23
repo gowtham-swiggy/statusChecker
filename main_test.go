@@ -1,10 +1,15 @@
 package main
 
-import "testing"
+import (
+	//"net/http"
+	"testing"
+)
 
 
 func TestPostHangler(t*testing.T){
-	//actual := 0
+	//request,_ := http.NewRequest("POST","/post",{"websites":["www.google.com"]})
+	//response := http.NewRecorder()
+
 }
 
 func TestGetHandler(t *testing.T) {
@@ -12,5 +17,5 @@ func TestGetHandler(t *testing.T) {
 }
 
 func TestGetSingleHandler(t *testing.T) {
-	
+
 }
