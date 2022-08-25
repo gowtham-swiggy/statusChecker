@@ -26,12 +26,10 @@ func (h httpLink) Checker() (stausCode int, err error) { // website Status Finde
 	client := http.Client{}
 	r, err := http.NewRequest("GET", "http://"+h.link, nil)
 	if err != nil {
-		fmt.Println(err)
 		return 0, err
 	}
-	resp, err := client.Do(r) // Hitting 
+	resp, err := client.Do(r) // Hitting
 	if err != nil {
-		fmt.Println(err)
 		return 0, err
 	}
 	defer resp.Body.Close() // Closing
@@ -59,11 +57,7 @@ func StatusUpdaterUtility() {
 func StatusUpdater(link string) {
 	var tmpVar httpLink
 	tmpVar.link = link
-	var err error
-	models.Sites[link], err = tmpVar.Checker() // Calling method to update the sites status.
-	if err != nil {
-		fmt.Println(err)
-	}
+	models.Sites[link], _ = tmpVar.Checker() // Calling method to update the sites status.
 }
 
 func HomePageHandler(w http.ResponseWriter, r *http.Request) { // Home Page Handler
@@ -77,7 +71,7 @@ func AnythingHandler(w http.ResponseWriter, r *http.Request) { // Invalid or 404
 }
 
 func PostHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-Type", "Application/json") 
+	w.Header().Set("Content-Type", "Application/json")
 	site := SiteStruct{}
 	err := json.NewDecoder(r.Body).Decode(&site) //Decoding
 	if err != nil {
@@ -87,11 +81,7 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 	for _, j := range site.Website {
 		var tmpVar httpLink
 		tmpVar.link = j
-		models.Sites[j], err = tmpVar.Checker() // Adding the data
-		if err != nil {
-			fmt.Println("Error occured for " + j)
-			fmt.Println(err)
-		}
+		models.Sites[j], _ = tmpVar.Checker() // Adding the data
 	}
 	fmt.Println("You are in Post Handler")
 	fmt.Fprint(w, models.Sites)
@@ -99,8 +89,12 @@ func PostHandler(w http.ResponseWriter, r *http.Request) {
 
 func GetHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("You are in Get Handler")
+	var resultString string
+	if len(models.Sites) == 0 {
+		fmt.Fprint(w, "No Data in map")
+
+	}
 	for i := range models.Sites { // Looping over the map
-		var resultString string
 		if models.Sites[i] == 200 { // Customize the result
 			resultString = "The status of website " + i + " is UP\n"
 		} else {
@@ -116,13 +110,12 @@ func GetSingleHandler(w http.ResponseWriter, r *http.Request) {
 	website := r.URL.Query().Get("name") // Extracting the Query details
 	var resultString string
 	stats, ok := models.Sites[website] // Checking status and the existence
-	if ok == true { // Customize the result
+	if ok == true {                    // Customize the result
 		if stats == 200 {
 			resultString = "The status of website " + website + " is UP"
 		} else {
 			resultString = "The status of website " + website + " is DOWN"
 		}
-		resultString = "The status of website " + website + " is UP"
 	} else {
 		resultString = "The Website is not present, add the site First"
 	}

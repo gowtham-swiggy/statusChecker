@@ -27,7 +27,7 @@ func TestHomePageHandler(t *testing.T) {
 }
 
 func TestPostHandler(t *testing.T) {
-	var jsonData = []byte(`{"website":["www.github.com/igkishore01/statuschecker"]}`)
+	var jsonData = []byte(`{"website":["www.google.com","www.invalidsite.com"]}`)
 	req, err := http.NewRequest("POST", "/post", bytes.NewBuffer(jsonData))
 	if err != nil {
 		t.Fatal(err)
@@ -40,7 +40,7 @@ func TestPostHandler(t *testing.T) {
 		t.Errorf("handler returned wrong status code: got %v want %v",
 			status, http.StatusOK)
 	}
-	expected := "map[www.github.com/igkishore01/statuschecker:404]"
+	expected := "map[www.google.com:200 www.invalidsite.com:0]"
 	if rr.Body.String() != expected {
 		t.Errorf("handler returned unexpected body: got %v want %v",
 			rr.Body.String(), expected)
@@ -59,7 +59,7 @@ func TestGetHandler(t *testing.T) {
 		t.Errorf("handler returned wrong status code: got %v want %v",
 			status, http.StatusOK)
 	}
-	expected := "The status of website www.github.com/igkishore01/statuschecker is DOWN"
+	expected := "No Data in map"
 	if rr.Body.String() != expected {
 		t.Errorf("handler returned unexpected body: got %v want %v",
 			rr.Body.String(), expected)
@@ -67,7 +67,7 @@ func TestGetHandler(t *testing.T) {
 }
 
 func TestGetSingleHandler(t *testing.T) {
-	req, err := http.NewRequest("GET", "/getsingle?name=www.github.com/igkishore01/statuschecker", nil)
+	req, err := http.NewRequest("GET", "/getsingle?name=www.notaddedsite.com", nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -78,7 +78,7 @@ func TestGetSingleHandler(t *testing.T) {
 		t.Errorf("handler returned wrong status code: got %v want %v",
 			status, http.StatusOK)
 	}
-	expected := "The status of website www.github.com/igkishore01/statuschecker is DOWN"
+	expected := "The Website is not present, add the site First"
 	if rr.Body.String() != expected {
 		t.Errorf("handler returned unexpected body: got %v want %v",
 			rr.Body.String(), expected)
